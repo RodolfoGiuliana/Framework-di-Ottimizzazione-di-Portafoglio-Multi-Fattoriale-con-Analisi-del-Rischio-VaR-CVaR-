@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-# Assuming these variables are defined elsewhere in your code
+
 np.random.seed(42)
 # Sample assets and returns data
 assets = ['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META', 'TSLA']
