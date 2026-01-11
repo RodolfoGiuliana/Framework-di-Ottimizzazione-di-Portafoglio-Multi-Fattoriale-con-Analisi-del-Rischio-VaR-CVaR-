@@ -1,0 +1,37 @@
+!pip install yfinance pandas numpy matplotlib scipy PyPortfolioOpt
+
+import yfinance as yf
+import pandas as pd
+import numpy as np
+
+# Ho scelto un mix di asset class (Azioni, Oro, Obbligazioni)
+assets = ['AAPL', 'MSFT', 'GOLD', 'TLT', 'AMZN']
+data = yf.download(assets, start="2020-01-01", end="2025-12-31")['Adj Close']
+
+# Ho calcolato i rendimenti logaritmici (standard nel settore)
+returns = np.log(data / data.shift(1)).dropna()
+
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import risk_models
+from pypfopt import expected_returns
+
+# Calcolato i rendimenti attesi e matrice di covarianza
+mu = expected_returns.mean_historical_return(data)
+S = risk_models.sample_cov(data)
+
+# Ho ottimizzato per il massimo Sharpe Ratio (miglior rapporto rischio/rendimento)
+ef = EfficientFrontier(mu, S)
+weights = ef.max_sharpe()
+cleaned_weights = ef.clean_weights()
+
+print(f"Pesi Ottimali: {cleaned_weights}")
+
+# Simulazione Monte Carlo per calcolare il VaR al 95%
+def calculate_var(returns, weights, confidence_level=0.05):
+    portfolio_rets = returns.dot(list(weights.values()))
+    var_95 = np.percentile(portfolio_rets, confidence_level * 100)
+    return var_95
+
+portfolio_weights = np.array(list(cleaned_weights.values()))
+var_val = calculate_var(returns, cleaned_weights)
+print(f"Value at Risk (95%): {var_val:.2%}")
